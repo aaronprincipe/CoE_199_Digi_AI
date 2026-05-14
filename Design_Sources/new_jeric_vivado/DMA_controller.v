@@ -103,11 +103,11 @@ module DMA_Controller #(
         output wire [3:0]  M_AXI_ARID,
         output wire [3:0]  M_AXI_AWID,
         input  wire [3:0]  M_AXI_RID,   // returned by MIG, not used
-        input  wire [3:0]  M_AXI_BID,   // returned by MIG, not used
+        input  wire [3:0]  M_AXI_BID   // returned by MIG, not used
 
         // DDR calibration done - do not fire any transfer until HIGH
         // Connect to MIG init_calib_complete (~100us after reset)
-        input  wire        i_ddr_calib_done
+        //input  wire        i_ddr_calib_done
     );
         // Constants 
         localparam BPB  = DATA_WIDTH / 8;           // bytes per beat = 8
@@ -323,7 +323,7 @@ module DMA_Controller #(
                     // Without this the DMA hangs in S_RADDR forever
                     // if fired before MIG init_calib_complete goes high
                     if ((start_toggle[i] != start_seen_toggle[i]) && !pending[i] &&
-                        !(mst != S_IDLE && m_ch == i[1:0]) && i_ddr_calib_done) begin
+                        !(mst != S_IDLE && m_ch == i[1:0])) begin
                         w_src[i]      <= cfg_src[i];
                         w_dst[i]      <= cfg_dst[i];
                         w_rem[i]      <= cfg_len[i];
