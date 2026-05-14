@@ -1,6 +1,9 @@
 # Set Current Directory to point to Github Repo directory (where project_run.tcl should be located)
-set SRCDIR "D:/CoE_199_Files"
-
+##########################################################
+## CHANGE THIS TO THE FILEPATH OF YOUR ACTUAL DIRECTORY ##
+## REPLACE THE \ SLASH AS A /                           ##
+##########################################################
+set SRCDIR "C:/Users/marie/CoE_199_Digi_AI"
 cd $SRCDIR
 
 #Add Verilog Files to Project
