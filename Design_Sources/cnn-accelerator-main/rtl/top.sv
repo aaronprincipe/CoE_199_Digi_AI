@@ -309,7 +309,7 @@ module top_accel #(
     ) wr_inst (
         .i_clk(i_clk),
         .i_nrst(i_nrst),
-        .i_en(ir_en),
+        .i_en(wr_en),
         .i_reg_clear(wr_reg_clear || i_reg_clear),
         .i_fifo_pop_en(wr_pop_en),
         .i_fifo_ptr_reset(),
