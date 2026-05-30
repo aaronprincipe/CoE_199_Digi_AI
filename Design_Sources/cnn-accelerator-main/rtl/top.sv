@@ -39,6 +39,7 @@ module top_accel #(
     input logic [ADDR_WIDTH-1:0] i_stride,              // Stride size
     input logic [ADDR_WIDTH-1:0] i_depth_mult,          // Only used for DW. Ignored for PW.
     input logic [DATA_WIDTH-1:0] zero_point,            // Output zero point for quantization
+    input logic [DATA_WIDTH-1:0] i_input_offset,        // Offset to be added to input values for quantization
 
     // Input router parameters
     input logic [ADDR_WIDTH-1:0] i_i_start_addr,        // Starting address in the input SPAD for the input router to read from
@@ -77,19 +78,17 @@ module top_accel #(
     output logic [SPAD_DATA_WIDTH-1:0] dbg_first_word,
     output logic [ADDR_WIDTH-1:0] dbg_last_word_addr,
     output logic [SPAD_DATA_WIDTH-1:0] dbg_last_word,
-
     output logic [15:0] dbg_or_read_count,
     output logic [ADDR_WIDTH-1:0] dbg_first_or_read_addr,
     output logic [ADDR_WIDTH-1:0] dbg_last_or_read_addr,
     output logic [SPAD_DATA_WIDTH-1:0] dbg_first_or_read_data,
     output logic [SPAD_DATA_WIDTH-1:0] dbg_last_or_read_data
-);
 
+);
     logic spad_w_write_en, spad_i_write_en, spad_b_write_en, spad_sc_write_en, spad_sh_write_en;
     // weight, ifmap, bias, scale, shift
     
     parameter weights = 3'b000, ifmaps = 3'b001, bias = 3'b010, scale = 3'b011, shift = 3'b100;
-
     // Select which SRAM to write to
     always_comb begin
         case (i_spad_select) 
@@ -100,8 +99,7 @@ module top_accel #(
                 spad_b_write_en = 1'b0;
                 spad_sc_write_en = 1'b0;
                 spad_sh_write_en = 1'b0;
-            end
-
+                end
             ifmaps: begin
                 // Input SRAM
                 spad_w_write_en = 1'b0;
@@ -109,8 +107,7 @@ module top_accel #(
                 spad_b_write_en = 1'b0;
                 spad_sc_write_en = 1'b0;
                 spad_sh_write_en = 1'b0;
-            end
-
+                end
             bias: begin
                 // Bias SRAM
                 spad_w_write_en = 1'b0;
@@ -118,8 +115,7 @@ module top_accel #(
                 spad_b_write_en = i_write_en;
                 spad_sc_write_en = 1'b0;
                 spad_sh_write_en = 1'b0;
-            end
-
+                end
             scale: begin
                 // Scale SRAM
                 spad_w_write_en = 1'b0;
@@ -127,8 +123,7 @@ module top_accel #(
                 spad_b_write_en = 1'b0;
                 spad_sc_write_en = i_write_en;
                 spad_sh_write_en = 1'b0;
-            end
-
+                end
             shift: begin
                 // Shift SRAM
                 spad_w_write_en = 1'b0;
@@ -136,15 +131,14 @@ module top_accel #(
                 spad_b_write_en = 1'b0;
                 spad_sc_write_en = 1'b0;
                 spad_sh_write_en = i_write_en;
-            end
-
+                end
             default: begin
                 spad_w_write_en = 1'b0;
                 spad_i_write_en = 1'b0;
                 spad_b_write_en = 1'b0;
                 spad_sc_write_en = 1'b0;
                 spad_sh_write_en = 1'b0;
-            end
+                end
         endcase
     end
 
@@ -162,13 +156,13 @@ module top_accel #(
 
     // Instantiate input router
     logic [ROWS-1:0] ir_data_valid;
-    logic [ROWS-1:0][DATA_WIDTH-1:0] ir_ifmap;
-    logic [0:ROWS-1][DATA_WIDTH-1:0] s_ifmap;
+    logic [ROWS-1:0][DATA_WIDTH:0] ir_ifmap;
+    logic [0:ROWS-1][DATA_WIDTH:0] s_ifmap;
     logic [0:ROWS-1] s_ifmap_valid;
 
     genvar ii;
     generate
-        for (ii = 0; ii < ROWS; ii++) begin
+        for (ii=0; ii < ROWS; ii++) begin
             assign s_ifmap[ii] = ir_ifmap[ii];
             assign s_ifmap_valid[ii] = ir_data_valid[ii];
         end
@@ -182,9 +176,9 @@ module top_accel #(
 
     genvar jj;
     generate
-        for (jj = 0; jj < COLUMNS; jj++) begin
-            assign s_weight[jj] = wr_weight[jj];
-            assign s_weight_valid[jj] = wr_data_valid[jj];
+        for (ii=0; ii < COLUMNS; ii++) begin
+            assign s_weight[ii] = wr_weight[ii];
+            assign s_weight_valid[ii] = wr_data_valid[ii];
         end
     endgenerate
 
@@ -286,6 +280,7 @@ module top_accel #(
         .i_spad_write_mask(i_write_mask),
         .i_start_addr(i_i_start_addr),
         .i_addr_end(i_i_addr_end),
+        .i_offset(i_input_offset),
         .o_read_done(), 
         .o_data(ir_ifmap),
         .o_data_valid(ir_data_valid),
@@ -314,7 +309,7 @@ module top_accel #(
     ) wr_inst (
         .i_clk(i_clk),
         .i_nrst(i_nrst),
-        .i_en(wr_en),
+        .i_en(ir_en),
         .i_reg_clear(wr_reg_clear || i_reg_clear),
         .i_fifo_pop_en(wr_pop_en),
         .i_fifo_ptr_reset(),
@@ -374,7 +369,7 @@ module top_accel #(
         .i_en(or_en),
         .i_conv_mode(i_conv_mode),
         .i_ifmap(ofmap),
-        .i_valid(psum_out_en),
+        .i_valid(),
         .o_shift_en(s_shift_en),
         .i_o_size(i_o_size),
         .i_o_c_size(i_o_c_size),
@@ -446,10 +441,10 @@ module top_accel #(
     );
 
     spad #(
-        .ADDR_WIDTH(8), // hardcode for now
+        .ADDR_WIDTH(8), // hardcode for now = exact for 256 elements.
         .SPAD_WIDTH(SPAD_DATA_WIDTH),
-        .DATA_WIDTH(2*DATA_WIDTH),
-        .SPAD_N(SPAD_DATA_WIDTH / (2*DATA_WIDTH))
+        .DATA_WIDTH(4*DATA_WIDTH),  // 32b multiplier
+        .SPAD_N(SPAD_DATA_WIDTH / (4*DATA_WIDTH))
     ) scale_spad (
         .i_clk(i_clk),
         .i_nrst(i_nrst),
@@ -466,8 +461,8 @@ module top_accel #(
     spad #(
         .ADDR_WIDTH(8), 
         .SPAD_WIDTH(SPAD_DATA_WIDTH),
-        .DATA_WIDTH(DATA_WIDTH),
-        .SPAD_N(SPAD_DATA_WIDTH / DATA_WIDTH)
+        .DATA_WIDTH(4*DATA_WIDTH),  // 32b shift
+        .SPAD_N(SPAD_DATA_WIDTH / (4*DATA_WIDTH))
     ) shift_spad (
         .i_clk(i_clk),
         .i_nrst(i_nrst),
@@ -492,13 +487,11 @@ module top_accel #(
             dbg_seen_route_en      <= 1'b0;
             dbg_seen_word_valid    <= 1'b0;
             dbg_seen_done          <= 1'b0;
-
             dbg_word_valid_count   <= 16'd0;
             dbg_first_word_addr    <= {ADDR_WIDTH{1'b0}};
             dbg_first_word         <= {SPAD_DATA_WIDTH{1'b0}};
             dbg_last_word_addr     <= {ADDR_WIDTH{1'b0}};
             dbg_last_word          <= {SPAD_DATA_WIDTH{1'b0}};
-
             dbg_or_read_count      <= 16'd0;
             dbg_first_or_read_addr <= {ADDR_WIDTH{1'b0}};
             dbg_last_or_read_addr  <= {ADDR_WIDTH{1'b0}};
@@ -508,37 +501,29 @@ module top_accel #(
             if (i_route_en) begin
                 dbg_seen_route_en <= 1'b1;
             end
-
             if (o_word_valid) begin
                 dbg_seen_word_valid <= 1'b1;
-
                 if (dbg_word_valid_count == 16'd0) begin
                     dbg_first_word_addr <= or_addr;
                     dbg_first_word      <= o_word;
                 end
-
                 dbg_word_valid_count <= dbg_word_valid_count + 16'd1;
                 dbg_last_word_addr   <= or_addr;
                 dbg_last_word        <= o_word;
             end
-
             if (o_done) begin
                 dbg_seen_done <= 1'b1;
             end
-
             if (i_or_read_en) begin
                 if (dbg_or_read_count == 16'd0) begin
                     dbg_first_or_read_addr <= i_or_addr;
                 end
-
                 dbg_last_or_read_addr <= i_or_addr;
             end
-
             if (o_or_data_out_valid) begin
                 if (dbg_or_read_count == 16'd0) begin
                     dbg_first_or_read_data <= o_or_data_out;
                 end
-
                 dbg_or_read_count <= dbg_or_read_count + 16'd1;
                 dbg_last_or_read_data <= o_or_data_out;
             end
