@@ -1,11 +1,14 @@
 `timescale 1ns / 1ps
 
-module top_wrapper (
+module top_wrapper #(
+    // ---- Constants ----
+    parameter ADDR_WIDTH      = 14,
+)(
     input  wire        i_clk,
     input  wire        i_nrst,
     input  wire        i_reg_clear,
     input  wire [31:0] i_data_in,
-    input  wire [7:0]  i_write_addr,
+    input  wire [ADDR_WIDTH-1:0]  i_write_addr,
     input  wire [3:0]  i_write_mask,
     input  wire [2:0]  i_spad_select,
     input  wire        i_write_en,
@@ -17,18 +20,19 @@ module top_wrapper (
     input  wire [7:0]  i_o_c_size,
     input  wire [7:0]  i_o_size,
     input  wire [7:0]  i_stride,
-    input  wire [7:0]  i_i_start_addr,
-    input  wire [7:0]  i_i_addr_end,
-    input  wire [7:0]  i_w_start_addr,
-    input  wire [7:0]  i_w_addr_end,
-    input  wire [7:0]  i_or_addr,
+    input  wire [7:0]  i_depth_mult,    
+    input  wire [ADDR_WIDTH-1:0]  i_i_start_addr,
+    input  wire [ADDR_WIDTH-1:0]  i_i_addr_end,
+    input  wire [ADDR_WIDTH-1:0]  i_w_start_addr,
+    input  wire [ADDR_WIDTH-1:0]  i_w_addr_end,
+    input  wire [ADDR_WIDTH-1:0]  i_or_addr,
     input  wire        i_or_read_en,
-    input  wire [15:0] i_quant_shift,
-    input  wire [15:0] i_quant_mult,
+    input  wire [7:0]  i_zero_point,
+    input  wire [7:0]  i_input_offset,
     output wire        o_done,
     output wire [31:0] o_word,
     output wire        o_word_valid,
-    output wire [7:0]  o_word_addr,
+    output wire [ADDR_WIDTH-1:0]  o_word_addr,
     output wire [3:0]  o_word_byte_offset,
     output wire [31:0] o_or_data_out,
     output wire        o_or_data_out_valid,
@@ -38,14 +42,14 @@ module top_wrapper (
     output wire        dbg_seen_word_valid,
     output wire        dbg_seen_done,
     output wire [15:0] dbg_word_valid_count,
-    output wire [7:0]  dbg_first_word_addr,
+    output wire [ADDR_WIDTH-1:0]  dbg_first_word_addr,
     output wire [31:0] dbg_first_word,
-    output wire [7:0]  dbg_last_word_addr,
+    output wire [ADDR_WIDTH-1:0]  dbg_last_word_addr,
     output wire [31:0] dbg_last_word,
 
     output wire [15:0] dbg_or_read_count,
-    output wire [7:0]  dbg_first_or_read_addr,
-    output wire [7:0]  dbg_last_or_read_addr,
+    output wire [ADDR_WIDTH-1:0]  dbg_first_or_read_addr,
+    output wire [ADDR_WIDTH-1:0]  dbg_last_or_read_addr,
     output wire [31:0] dbg_first_or_read_data,
     output wire [31:0] dbg_last_or_read_data,
 
@@ -56,23 +60,16 @@ module top_wrapper (
     output wire        dbg_route_en_from_ir
 );
 
-    wire [7:0] zero_point_tie;
-    wire [7:0] depth_mult_tie;
-    assign zero_point_tie = 8'd0;
-    assign depth_mult_tie = 8'd1;
-    wire unused_quant;
-    assign unused_quant = ^{i_quant_shift, i_quant_mult};
-
     top_accel #(
         .DATA_WIDTH      (8),
         .SPAD_DATA_WIDTH (32),
         .SPAD_N          (4),
 
-        .ADDR_WIDTH      (8),
+        .ADDR_WIDTH      (ADDR_WIDTH),
         .ROWS            (8),
         .COLUMNS         (8),
         .MISO_DEPTH      (16),
-        .MPP_DEPTH       (16)
+        .MPP_DEPTH       (9)
     ) top_inst (
         .i_clk              (i_clk),
         .i_nrst             (i_nrst),
@@ -90,8 +87,9 @@ module top_wrapper (
         .i_o_c_size         (i_o_c_size),
         .i_o_size           (i_o_size),
         .i_stride           (i_stride),
-        .i_depth_mult       (depth_mult_tie),
-        .zero_point         (zero_point_tie),
+        .i_depth_mult       (i_depth_mult),
+        .zero_point         (i_zero_point),
+        .i_input_offset     (i_input_offset),
         .i_i_start_addr     (i_i_start_addr),
         .i_i_addr_end       (i_i_addr_end),
         .i_w_start_addr     (i_w_start_addr),
