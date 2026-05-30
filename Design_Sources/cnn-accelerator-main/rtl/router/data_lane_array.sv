@@ -1,3 +1,5 @@
+`timescale 1ns / 1ps
+
 module data_lane_array #(
     parameter int COUNT = 4,
     parameter int SPAD_DATA_WIDTH = 64,
@@ -46,7 +48,7 @@ module data_lane_array #(
     logic [COUNT-1:0][$clog2(MISO_DEPTH):0] rr_slots;
 
     // Stalled popping logic
-    always_ff @ (posedge i_clk or negedge i_nrst) begin
+    always_ff @(posedge i_clk) begin
         if (~i_nrst) begin
             rr_pop_en <= 0;
             counter <= 0;

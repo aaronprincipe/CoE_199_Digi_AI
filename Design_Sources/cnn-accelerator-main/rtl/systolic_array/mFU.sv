@@ -1,3 +1,5 @@
+`timescale 1ns / 1ps
+
 module mFU (
     input logic mac_en,
     input  logic        clk, nrst,
