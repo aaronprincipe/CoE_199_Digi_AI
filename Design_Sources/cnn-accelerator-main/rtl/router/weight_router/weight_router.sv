@@ -1,3 +1,5 @@
+`timescale 1ns / 1ps
+
 module weight_router #(
     parameter int DATA_WIDTH = 8,
     parameter int SPAD_DATA_WIDTH = 64,
@@ -157,6 +159,7 @@ module weight_router #(
         .o_s_c(o_s_c)
     );
 
+    logic [COUNT-1:0][DATA_WIDTH-1:0] weight_data;
     data_lane_array #(
         .COUNT(COUNT),
         .ADDR_WIDTH(ADDR_WIDTH),
@@ -184,12 +187,19 @@ module weight_router #(
         .i_data_valid(tr_data_valid),
         .i_miso_pop_en(fifo_pop_en),
         .i_p_mode(i_p_mode),
-        .o_data(o_data),
+        .o_data(weight_data),
         .o_data_valid(o_data_valid),
         .o_fifo_full(fifo_full),
         .o_fifo_empty(fifo_empty),
         .o_route_done(fifo_route_done),
         .o_idle(fifo_idle)
     );
+
+    genvar ii;
+    generate
+        for (ii=0; ii < COUNT; ii++) begin
+            assign o_data[ii] = (o_data_valid[ii]) ? weight_data[ii] : '0;
+        end
+    endgenerate
 
 endmodule

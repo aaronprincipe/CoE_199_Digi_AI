@@ -1,3 +1,5 @@
+`timescale 1ns / 1ps
+
 /*
     Make this generic first, then we can add the DWise Convolution
 */
@@ -84,6 +86,30 @@ module ir_controller #(
 
     // Add logic for starting read address of tile reader
     // Should not go from the start everytime
+    
+    // Dwise sliding window address generation
+    logic [0:KERNEL_LENGTH-1][$clog2(SPAD_N)+ADDR_WIDTH-1:0] addr;
+    genvar x, y;
+    generate  
+        for (x = 0; x < KERNEL_SIZE; x = x + 1) begin : gen_x
+            for (y = 0; y < KERNEL_SIZE; y = y + 1) begin : gen_y
+                localparam int addr_idx = x * KERNEL_SIZE + y;
+                always_comb begin
+                    if (i_conv_mode) begin
+                    // offset_nchw(n, c, h, w) = c * HW + h * W + w
+                    // Uncomment if using NCHW format
+                    // addr[addr_idx] = (i_start_addr * SPAD_N) + ((o_x + x) * i_i_size + (o_y + y));
+
+                    // offset_nhwc(n, c, h, w) = h * WC + w * C + c
+                    // Uncomment if using NHWC format
+                        addr[addr_idx] = (i_start_addr * SPAD_N) + (o_x + x) * i_i_size * i_i_c_size + (o_y + y) * i_i_c_size + i_i_c;
+                    end else begin
+                        addr[addr_idx] = '0;
+                    end
+                end
+            end
+        end
+    endgenerate
 
     assign route_en = i_en & i_fifo_empty;
     assign x_increment = o_x < (i_o_size * i_stride) - i_stride;
@@ -93,9 +119,7 @@ module ir_controller #(
     assign d_tile_addr = addr[0] >> $clog2(SPAD_N); // Assuming the first address corresponds to the first tile. See code below for address generation
     assign p_tile_addr = (prev_addr + (i_start_addr * SPAD_N)) >> $clog2(SPAD_N);
 
-    logic [0:KERNEL_LENGTH-1][$clog2(SPAD_N)+ADDR_WIDTH-1:0] addr;
-
-    always_ff @(posedge i_clk or negedge i_nrst) begin
+    always_ff @(posedge i_clk) begin
         if (~i_nrst) begin
             o_route_en <= 0;
             o_context_done <= 0;
@@ -322,29 +346,6 @@ module ir_controller #(
             endcase
         end
     end
-
-    // Dwise sliding window address generation
-    genvar x, y;
-    generate  
-        for (x = 0; x < KERNEL_SIZE; x = x + 1) begin : gen_x
-            for (y = 0; y < KERNEL_SIZE; y = y + 1) begin : gen_y
-                localparam int addr_idx = x * KERNEL_SIZE + y;
-                always_comb begin
-                    if (i_conv_mode) begin
-                    // offset_nchw(n, c, h, w) = c * HW + h * W + w
-                    // Uncomment if using NCHW format
-                    // addr[addr_idx] = (i_start_addr * SPAD_N) + ((o_x + x) * i_i_size + (o_y + y));
-
-                    // offset_nhwc(n, c, h, w) = h * WC + w * C + c
-                    // Uncomment if using NHWC format
-                        addr[addr_idx] = (i_start_addr * SPAD_N) + (o_x + x) * i_i_size * i_i_c_size + (o_y + y) * i_i_c_size + i_i_c;
-                    end else begin
-                        addr[addr_idx] = '0;
-                    end
-                end
-            end
-        end
-    endgenerate
 
     assign o_tile_addr = tile_addr;
 endmodule

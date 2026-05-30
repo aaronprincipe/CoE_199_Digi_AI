@@ -1,3 +1,5 @@
+`timescale 1ns / 1ps
+
 module wr_controller #(
     parameter int COLUMN = 4,
     parameter int ADDR_WIDTH = 8,
@@ -71,15 +73,35 @@ module wr_controller #(
     logic c_increment, c_done;
 
     logic clear_type; // 0 - Clear all, 1 - Clear only FIFO
+
+    // Fetch the address of the weights in NCHW/OHWI format
+    // In theory we could expand to a standard convolution
+    logic [0:KERNEL_LENGTH-1][$clog2(SPAD_N)+ADDR_WIDTH-1:0] addr;
+    genvar x, y;
+    generate  
+        for (x = 0; x < KERNEL_SIZE; x = x + 1) begin : gen_x
+            for (y = 0; y < KERNEL_SIZE; y = y + 1) begin : gen_y
+                localparam int addr_idx = x * KERNEL_SIZE + y;
+                always_comb begin
+                    if (i_conv_mode) begin
+                        // o_c, i_i_c, i_i_c_size
+                        addr[addr_idx] = (i_start_addr * SPAD_N) + (x * KERNEL_SIZE + y) * i_o_c_size + i_i_c * i_depth_mult + o_c;
+                    end else begin
+                        addr[addr_idx] = '0;
+                    end
+                end
+            end
+        end
+    endgenerate
+
+
     logic [ADDR_WIDTH-1:0] d_tile_addr, p_tile_addr;
     assign route_en = i_en & i_fifo_empty;
     assign c_increment = (i_conv_mode) ? (o_c < i_depth_mult - 1) : (o_c < i_o_c_size - 1);     // If DW, we need to increment c until we reach the depth multiplier. If PW, we need to increment until we reach the output channel size
     assign d_tile_addr = addr[0] >> $clog2(SPAD_N);                                             // Assuming the first address corresponds to the first tile. See code below for address generation
     assign p_tile_addr = ((i_start_addr * SPAD_N) + o_c * i_i_c_size) >> $clog2(SPAD_N);
 
-    logic [0:KERNEL_LENGTH-1][$clog2(SPAD_N)+ADDR_WIDTH-1:0] addr;
-
-    always_ff @(posedge i_clk or negedge i_nrst) begin
+    always_ff @(posedge i_clk) begin
         if (~i_nrst) begin
             o_route_en <= 0;
             o_context_done <= 0;
@@ -258,24 +280,5 @@ module wr_controller #(
             endcase
         end
     end
-
-    // Fetch the address of the weights in NCHW/OHWI format
-    // In theory we could expand to a standard convolution
-    genvar x, y;
-    generate  
-        for (x = 0; x < KERNEL_SIZE; x = x + 1) begin : gen_x
-            for (y = 0; y < KERNEL_SIZE; y = y + 1) begin : gen_y
-                localparam int addr_idx = x * KERNEL_SIZE + y;
-                always_comb begin
-                    if (i_conv_mode) begin
-                        // o_c, i_i_c, i_i_c_size
-                        addr[addr_idx] = (i_start_addr * SPAD_N) + (x * KERNEL_SIZE + y) * i_o_c_size + i_i_c * i_depth_mult + o_c;
-                    end else begin
-                        addr[addr_idx] = '0;
-                    end
-                end
-            end
-        end
-    endgenerate
 
 endmodule
