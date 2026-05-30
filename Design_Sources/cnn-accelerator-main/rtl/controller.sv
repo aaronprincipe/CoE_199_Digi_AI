@@ -1,3 +1,5 @@
+`timescale 1ns / 1ps
+
 /*
     - When both IR and WR are ready, send pop_en signal to both
     - When route is enabled, send en signal to both
@@ -92,7 +94,7 @@ module top_controller # (
         DONE
     */
 
-    always_ff @(posedge i_clk or negedge i_nrst) begin
+    always_ff @(posedge i_clk) begin
         if(~i_nrst) begin
             o_wr_en <= 0;
             o_ir_pop_en <= 0;
@@ -210,16 +212,27 @@ module top_controller # (
                     if (i_ir_context_done & i_wr_context_done) begin
                         o_ir_pop_en <= 0;
                         o_wr_pop_en <= 0;
-                        state <= COMPUTE;
                         
-                        // Determine if there are more rows or columns being used
-                        if (i_s_r >= i_s_c) begin
-                            max_compute_cycles <= i_s_r + 1;
-                        end else begin
-                            max_compute_cycles <= i_s_c + 1;
+                        // If tile done, then we move to compute, otherwise we route the next tile
+                        if (i_ir_tile_done) begin
+                            // Determine if there are more rows or columns being used
+                            if (i_s_r >= i_s_c) begin
+                                max_compute_cycles <= i_s_r + 1;
+                            end else begin
+                                max_compute_cycles <= i_s_c + 1;
+                            end
+
+                            o_pe_en <= 1;
+                            state <= COMPUTE;
+                        end else begin // Complete the tile first. Ex: For PW, if Cin[0-7] is done, route Cin[8-15] next.
+                            o_pe_en <= 0;
+                            state <= IDLE;
                         end
+                    end else begin
+                        o_ir_pop_en <= 1;
+                        o_wr_pop_en <= 1;
+                        o_pe_en <= 1;
                     end
-                    o_pe_en <= 1;
                 end
                 
                 // Given row and column, estimate how many cycles it will take to compute
@@ -233,15 +246,8 @@ module top_controller # (
                     end else begin
                         o_pe_en <= 0;
                         cntr <= 0;
-                        
-                        // If tile done, then we can start routing out the psum, otherwise we are still waiting for more input
-                        if (i_ir_tile_done) begin
-                            o_psum_out_en <= 1;
-                            state <= OUTPUT_ROUTING;
-                        end else begin
-                            o_psum_out_en <= 0;
-                            state <= IDLE;
-                        end
+                        o_psum_out_en <= 1;
+                        state <= OUTPUT_ROUTING;
                     end
                 end
 
