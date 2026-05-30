@@ -18,8 +18,8 @@
 // 0x2C w_addr_end
 // 0x30 CTRL       [0]=route_en/START, [1]=reg_clear
 // 0x34 STATUS     [0]=done_latche
-// 0x38 quant_sh
-// 0x3C quant_mult
+// 0x38 zero_point
+// 0x3C input_offset
 // 0x40 DDR_STATUS [0]=i_ddr_calib_done
 //////////////////////////////////////////////////////////////////////////////////
 
@@ -82,9 +82,9 @@ module systolic_csr #(
     output reg                    o_route_en,
     output reg                    o_reg_clear,
 
-    // --- Quantization Outputs ---
-    output reg  [DATA_WIDTH-1:0]   o_quant_sh,
-    output reg  [2*DATA_WIDTH-1:0] o_quant_mult
+    // --- Zero Points ---
+    output reg  [DATA_WIDTH-1:0]   o_zero_point,
+    output reg  [DATA_WIDTH-1:0]   o_input_offset
 );
 
     // ================================================================
@@ -144,8 +144,8 @@ module systolic_csr #(
             o_route_en     <= 1'b0;
             o_reg_clear    <= 1'b0;
 
-            o_quant_sh     <= 8'h05;
-            o_quant_mult   <= 16'h9c8c;
+            o_zero_point   <= {DATA_WIDTH{1'b0}};
+            o_input_offset <= {DATA_WIDTH{1'b0}};
 
             done_latched              <= 1'b0;
             run_active                <= 1'b0;
@@ -251,11 +251,11 @@ module systolic_csr #(
                     // 6'h0D: STATUS is read-only.
 
                     6'h0E: begin
-                        o_quant_sh <= s_axil_wdata[DATA_WIDTH-1:0];
+                        o_zero_point <= s_axil_wdata[DATA_WIDTH-1:0];
                     end
 
                     6'h0F: begin
-                        o_quant_mult <= s_axil_wdata[2*DATA_WIDTH-1:0];
+                        o_input_offset <= s_axil_wdata[DATA_WIDTH-1:0];
                     end
 
                     default: begin
@@ -314,8 +314,8 @@ module systolic_csr #(
                     // This is safer than exposing raw i_done only.
                     6'h0D: s_axil_rdata <= {31'd0, done_latched};
 
-                    6'h0E: s_axil_rdata <= {{(32-DATA_WIDTH){1'b0}}, o_quant_sh};
-                    6'h0F: s_axil_rdata <= {{(32 - 2*DATA_WIDTH){1'b0}}, o_quant_mult};
+                    6'h0E: s_axil_rdata <= {{(32-DATA_WIDTH){o_zero_point[DATA_WIDTH-1]}}, o_zero_point};
+                    6'h0F: s_axil_rdata <= {{(32-DATA_WIDTH){o_input_offset[DATA_WIDTH-1]}}, o_input_offset};
 
                     // DDR_STATUS at byte offset 0x40.
                     // Since address decode uses [7:2], 0x40 becomes 6'h10.
