@@ -1,3 +1,5 @@
+`timescale 1ns / 1ps
+
 module p_data_selector #(
     parameter int SPAD_DATA_WIDTH = 64,
     parameter int DATA_WIDTH = 8,
@@ -46,7 +48,7 @@ module p_data_selector #(
     assign write_en = i_data_valid & i_en;
 
         // Store reference address
-    always_ff @(posedge i_clk or negedge i_nrst) begin
+    always_ff @(posedge i_clk) begin
         if (~i_nrst) begin
             start_addr <= 0;
             end_addr <= 0;
@@ -67,7 +69,7 @@ module p_data_selector #(
     assign check = i_spad_addr * SPAD_N + SPAD_N - 1;
 
     // Check if done
-    always_ff @(posedge i_clk or negedge i_nrst) begin
+    always_ff @(posedge i_clk) begin
         if (~i_nrst) begin
             route_done <= 0;
         end else begin
@@ -121,6 +123,8 @@ module p_data_selector #(
             for (int i = 0; i < SPAD_N; i = i + 1) begin
                 addr_offset = addr_offset + f_data_hit[i];
             end
+        end else begin
+            addr_offset = 0;
         end
     end
 

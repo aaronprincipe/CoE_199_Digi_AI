@@ -1,3 +1,5 @@
+`timescale 1ns / 1ps
+
 // Multiple Input Single Output (MISO) FIFO
 module miso_fifo #(
     parameter int DEPTH = 16,  
@@ -48,7 +50,7 @@ module miso_fifo #(
     assign pop_en = i_pop_en && !o_empty;
 
     // Write data
-    always @ (posedge i_clk or negedge i_nrst) begin
+    always @ (posedge i_clk) begin
         if (~i_nrst) begin
             w_pointer <= 0;
         end else if (i_clear) begin
@@ -69,6 +71,8 @@ module miso_fifo #(
             for (int i = 0; i < DATA_LENGTH; i = i + 1) begin
                 w_offset = w_offset + i_valid[i];
             end
+        end else begin
+            w_offset = 0;
         end
     end
 
@@ -99,7 +103,7 @@ module miso_fifo #(
     end
 
     // Pop data
-    always_ff @ (posedge i_clk or negedge i_nrst) begin
+    always_ff @ (posedge i_clk) begin
         if (~i_nrst) begin
             r_pointer <= 0;
             o_data <= 0;
