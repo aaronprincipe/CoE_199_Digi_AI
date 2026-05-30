@@ -1,3 +1,5 @@
+`timescale 1ns / 1ps
+
 module input_router #(
     parameter int DATA_WIDTH = 8,
     parameter int SPAD_DATA_WIDTH = 64,
@@ -26,6 +28,7 @@ module input_router #(
     input logic [ADDR_WIDTH-1:0] i_i_c_size,
     input logic [ADDR_WIDTH-1:0] i_i_c,
     input logic [ADDR_WIDTH-1:0] i_stride,
+    input logic [DATA_WIDTH-1:0] i_offset, // For signed quantization offset
 
     // SPAD related signals
     input logic i_spad_write_en,
@@ -39,7 +42,7 @@ module input_router #(
     output logic o_read_done,
 
     // Output signals
-    output logic [COUNT-1:0][DATA_WIDTH-1:0] o_data,
+    output logic [COUNT-1:0][DATA_WIDTH:0] o_data,
     output logic [COUNT-1:0] o_data_valid,
 
     // Output router signals
@@ -170,6 +173,7 @@ module input_router #(
         .i_slots(slots)
     );
 
+    logic [COUNT-1:0][DATA_WIDTH-1:0] input_data;
     data_lane_array #(
         .COUNT(COUNT),
         .ADDR_WIDTH(ADDR_WIDTH),
@@ -197,7 +201,7 @@ module input_router #(
         .i_data_valid(tr_data_valid),
         .i_miso_pop_en(fifo_pop_en),
         .i_p_mode(i_p_mode),
-        .o_data(o_data),
+        .o_data(input_data),
         .o_data_valid(o_data_valid),
         .o_fifo_full(fifo_full),
         .o_fifo_empty(fifo_empty),
@@ -206,10 +210,17 @@ module input_router #(
         .o_slots(slots)
     );
 
-
+    genvar ii;
+    generate
+        for (ii=0; ii < COUNT; ii++) begin
+            assign o_data[ii] = (o_data_valid[ii]) ? 
+                                ({input_data[ii][DATA_WIDTH-1], input_data[ii]} - {i_offset[DATA_WIDTH-1], i_offset})
+                                : '0;
+        end
+    endgenerate
 
     assign o_route_en = route_en;
-
+    /*
     // Debug: Display o_data one cycle after fifo_pop_en is asserted
     logic fifo_pop_en_r = 0;
     always @(posedge i_clk) begin
@@ -218,4 +229,5 @@ module input_router #(
             $display("[%0t] o_data (after fifo_pop_en): %h", $time, o_data);
         end
     end
+    */
 endmodule

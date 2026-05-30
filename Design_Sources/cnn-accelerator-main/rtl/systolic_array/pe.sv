@@ -1,3 +1,5 @@
+`timescale 1ns / 1ps
+
 module pe #(
     parameter int DATA_WIDTH = 8
 ) (
@@ -5,7 +7,8 @@ module pe #(
     input logic [1:0] i_mode,
 
     // Data Inputs 
-    input logic [DATA_WIDTH-1:0] i_ifmap, i_weight,
+    input logic [DATA_WIDTH:0] i_ifmap, 
+    input logic [DATA_WIDTH-1:0] i_weight,
     input logic [DATA_WIDTH*4-1:0] i_psum,
 
     // Control Inputs
@@ -18,14 +21,16 @@ module pe #(
     input logic i_psum_out_en, i_scan_en,
 
     // Data Outputs
-    output logic [DATA_WIDTH-1:0] o_ifmap, o_weight,
+    output logic [DATA_WIDTH:0] o_ifmap,
+    output logic [DATA_WIDTH-1:0] o_weight,
     output logic [DATA_WIDTH*4-1:0] o_ofmap
 );
-    logic [DATA_WIDTH-1:0] reg_ifmap, reg_weight;
+    logic [DATA_WIDTH:0] reg_ifmap;
+    logic [DATA_WIDTH-1:0] reg_weight;
     logic signed [DATA_WIDTH*2-1:0] o_multiplier;
     logic signed [DATA_WIDTH*4-1:0] reg_psum, reg_psum_out;
 
-    always_ff @(posedge i_clk or negedge i_nrst) begin
+    always_ff @(posedge i_clk) begin
         if (~i_nrst) begin
             reg_ifmap <= 0;
             reg_weight <= 0;
@@ -58,7 +63,7 @@ module pe #(
     assign o_multiplier = $signed(i_ifmap) * $signed(i_weight);
 
     // Multiplier and Accumulator
-    always_ff @(posedge i_clk or negedge i_nrst) begin
+    always_ff @(posedge i_clk) begin
         if(~i_nrst) begin
             reg_psum <= 0;
         end else begin
@@ -71,7 +76,7 @@ module pe #(
     end
 
     // Output partial sum to the next PE
-    always_ff @(posedge i_clk or negedge i_nrst) begin
+    always_ff @(posedge i_clk) begin
         if(~i_nrst) begin
             reg_psum_out <= 0;
         end else begin
