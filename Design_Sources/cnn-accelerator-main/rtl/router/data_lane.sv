@@ -1,3 +1,5 @@
+`timescale 1ns / 1ps
+
 module data_lane #(
     parameter int SPAD_DATA_WIDTH = 64,
     parameter int DATA_WIDTH = 8,
@@ -150,7 +152,7 @@ module data_lane #(
     ) miso_fifo (
         .i_clk(i_clk),
         .i_nrst(i_nrst),
-        .i_clear(i_fifo_clear),
+        .i_clear(i_fifo_clear || i_reg_clear), // Clear on both reg_clear and fifo_clear
         .i_write_en(f_data_hit[0]),
         .i_pop_en(i_miso_pop_en),
         .i_r_pointer_reset(i_fifo_ptr_reset),
