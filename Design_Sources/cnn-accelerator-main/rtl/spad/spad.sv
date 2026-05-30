@@ -1,3 +1,5 @@
+`timescale 1ns / 1ps
+
 module spad # (
     parameter int ADDR_WIDTH = 8,
     parameter int SPAD_WIDTH = 64,
@@ -11,6 +13,10 @@ module spad # (
     output logic [SPAD_WIDTH-1:0] o_data_out,
     output logic o_data_out_valid
 );
+    // force byte-wide write enable. Vivado infers a single write enable without this.
+    // tradeoff is speed apparently, but it's fine for now since the quant units are currently the crit path
+    // if you're reading this from the future, consider this.
+    (* ram_decomp = "power" *) 
     logic [SPAD_WIDTH-1:0] buffer [(2**ADDR_WIDTH)-1:0];
 
     // Read data
@@ -22,7 +28,7 @@ module spad # (
         end
     end
 
-    always_ff @(posedge i_clk or negedge i_nrst) begin
+    always_ff @(posedge i_clk) begin
         if (~i_nrst) begin
             o_data_out_valid <= 0;
         end else begin
