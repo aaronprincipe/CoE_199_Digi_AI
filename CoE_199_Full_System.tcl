@@ -1,6 +1,6 @@
 
 ################################################################
-# This is a generated script based on design: uart_bd
+# This is a generated script based on design: person_detection
 #
 # Though there are limitations about the generated script,
 # the main purpose of this utility is to make learning
@@ -214,7 +214,7 @@ if { $bCheckIPsPassed != 1 } {
 # MIG PRJ FILE TCL PROCs
 ##################################################################
 
-proc write_mig_file_uart_bd_mig_7series_0_0 { str_mig_prj_filepath } {
+proc write_mig_file_person_detection_mig_7series_0_0 { str_mig_prj_filepath } {
 
    file mkdir [ file dirname "$str_mig_prj_filepath" ]
    set mig_prj_file [open $str_mig_prj_filepath  w+]
@@ -360,7 +360,7 @@ proc write_mig_file_uart_bd_mig_7series_0_0 { str_mig_prj_filepath } {
 
    close $mig_prj_file
 }
-# End of write_mig_file_uart_bd_mig_7series_0_0()
+# End of write_mig_file_person_detection_mig_7series_0_0()
 
 
 
@@ -502,7 +502,7 @@ proc create_root_design { parentCell } {
   set str_mig_folder [get_property IP_DIR [ get_ips [ get_property CONFIG.Component_Name $mig_7series_0 ] ] ]
   set str_mig_file_name mig_a.prj
   set str_mig_file_path ${str_mig_folder}/${str_mig_file_name}
-  write_mig_file_uart_bd_mig_7series_0_0 $str_mig_file_path
+  write_mig_file_person_detection_mig_7series_0_0 $str_mig_file_path
 
   set_property -dict [list \
     CONFIG.BOARD_MIG_PARAM {ddr3_sdram} \
@@ -719,7 +719,7 @@ proc create_root_design { parentCell } {
   connect_bd_net -net axi_uartlite_0_s_axi_rdata [get_bd_pins axi_uartlite_0/s_axi_rdata] [get_bd_pins process_rdata_0/data_i]
   connect_bd_net -net bootloader_for_data_0_done [get_bd_pins qspi_bootloader_0/done] [get_bd_pins core_nreset_new_0/bootload_data_done]
   connect_bd_net -net clk_1 [get_bd_ports clk] [get_bd_pins clk_wiz_0/clk_in1]
-  connect_bd_net -net clk_wiz_0_clk_out1 [get_bd_pins clk_wiz_0/clk_out1] [get_bd_pins proc_sys_reset_0/slowest_sync_clk] [get_bd_pins axi_bram_ctrl_0/s_axi_aclk] [get_bd_pins axi_uartlite_0/s_axi_aclk] [get_bd_pins instmem_xpm_0/clk] [get_bd_pins cores_to_AXI4_0/clk] [get_bd_pins axi_quad_spi_0/s_axi_aclk] [get_bd_pins axi_quad_spi_0/ext_spi_clk] [get_bd_pins core_extmem_cacheless_0/clk] [get_bd_pins smartconnect_1/aclk] [get_bd_pins qspi_inst_bootloader_0/clk] [get_bd_pins ila_0/clk] [get_bd_pins DMA_Controller_0/clk] [get_bd_pins systolic_csr_0/clk] [get_bd_pins ila_2/clk] [get_bd_pins axi_spad_write_adapt_0/aclk] [get_bd_pins top_wrapper_0/i_clk] [get_bd_pins qspi_bootloader_0/clk] [get_bd_pins axi_output_read_adap_0/clk]
+  connect_bd_net -net clk_wiz_0_clk_out1 [get_bd_pins clk_wiz_0/clk_out1] [get_bd_pins proc_sys_reset_0/slowest_sync_clk] [get_bd_pins axi_bram_ctrl_0/s_axi_aclk] [get_bd_pins axi_uartlite_0/s_axi_aclk] [get_bd_pins instmem_xpm_0/clk] [get_bd_pins cores_to_AXI4_0/clk] [get_bd_pins axi_quad_spi_0/s_axi_aclk] [get_bd_pins axi_quad_spi_0/ext_spi_clk] [get_bd_pins core_extmem_cacheless_0/clk] [get_bd_pins smartconnect_1/aclk] [get_bd_pins qspi_inst_bootloader_0/clk] [get_bd_pins ila_0/clk] [get_bd_pins ila_2/clk] [get_bd_pins axi_spad_write_adapt_0/aclk] [get_bd_pins qspi_bootloader_0/clk] [get_bd_pins axi_output_read_adap_0/clk] [get_bd_pins DMA_Controller_0/clk] [get_bd_pins top_wrapper_0/i_clk] [get_bd_pins systolic_csr_0/clk]
   connect_bd_net -net clk_wiz_0_clk_out2 [get_bd_pins clk_wiz_0/clk_out2] [get_bd_pins mig_7series_0/sys_clk_i]
   connect_bd_net -net clk_wiz_0_locked [get_bd_pins clk_wiz_0/locked] [get_bd_pins proc_sys_reset_0/dcm_locked]
   connect_bd_net -net core_extmem_cacheless_0_ext_inst_addr [get_bd_pins core_extmem_cacheless_0/ext_inst_addr] [get_bd_pins instmem_xpm_0/addr]
@@ -734,11 +734,11 @@ proc create_root_design { parentCell } {
   connect_bd_net -net cores_to_AXI4_0_o_grant_core_1 [get_bd_pins cores_to_AXI4_0/o_grant_core_1] [get_bd_pins core_extmem_cacheless_0/ext_noncache_data_gnt]
   connect_bd_net -net cores_to_AXI4_0_valid_data [get_bd_pins cores_to_AXI4_0/valid_data] [get_bd_pins core_extmem_cacheless_0/ext_noncache_data_valid]
   connect_bd_net -net cores_to_AXI4_0_valid_write_data [get_bd_pins cores_to_AXI4_0/valid_write_data] [get_bd_pins core_extmem_cacheless_0/ext_noncache_data_write_valid]
-  connect_bd_net -net mig_7series_0_init_calib_complete [get_bd_pins mig_7series_0/init_calib_complete] [get_bd_ports init_calib_complete] [get_bd_pins core_nreset_new_0/init_calib_complete] [get_bd_pins qspi_data_nreset_0/init_calib_complete] [get_bd_pins DMA_Controller_0/i_ddr_calib_done] [get_bd_pins systolic_csr_0/i_ddr_calib_done]
+  connect_bd_net -net mig_7series_0_init_calib_complete [get_bd_pins mig_7series_0/init_calib_complete] [get_bd_ports init_calib_complete] [get_bd_pins core_nreset_new_0/init_calib_complete] [get_bd_pins qspi_data_nreset_0/init_calib_complete] [get_bd_pins systolic_csr_0/i_ddr_calib_done]
   connect_bd_net -net mig_7series_0_mmcm_locked [get_bd_pins mig_7series_0/mmcm_locked] [get_bd_pins proc_sys_reset_1/dcm_locked]
   connect_bd_net -net new_instmem_0_instruction [get_bd_pins instmem_xpm_0/instruction] [get_bd_pins core_extmem_cacheless_0/ext_inst_data]
   connect_bd_net -net nrst_1 [get_bd_ports nrst] [get_bd_pins clk_wiz_0/resetn] [get_bd_pins proc_sys_reset_0/ext_reset_in] [get_bd_pins mig_7series_0/sys_rst] [get_bd_pins proc_sys_reset_1/ext_reset_in]
-  connect_bd_net -net proc_sys_reset_0_peripheral_aresetn [get_bd_pins proc_sys_reset_0/peripheral_aresetn] [get_bd_pins axi_bram_ctrl_0/s_axi_aresetn] [get_bd_pins axi_uartlite_0/s_axi_aresetn] [get_bd_pins instmem_xpm_0/nrst] [get_bd_pins cores_to_AXI4_0/nrst] [get_bd_pins axi_quad_spi_0/s_axi_aresetn] [get_bd_pins smartconnect_1/aresetn] [get_bd_pins qspi_data_nreset_0/nrst] [get_bd_pins qspi_inst_bootloader_0/nrst] [get_bd_pins DMA_Controller_0/nrst] [get_bd_pins systolic_csr_0/nrst] [get_bd_pins axi_spad_write_adapt_0/aresetn] [get_bd_pins top_wrapper_0/i_nrst] [get_bd_pins axi_output_read_adap_0/nrst]
+  connect_bd_net -net proc_sys_reset_0_peripheral_aresetn [get_bd_pins proc_sys_reset_0/peripheral_aresetn] [get_bd_pins axi_bram_ctrl_0/s_axi_aresetn] [get_bd_pins axi_uartlite_0/s_axi_aresetn] [get_bd_pins instmem_xpm_0/nrst] [get_bd_pins cores_to_AXI4_0/nrst] [get_bd_pins axi_quad_spi_0/s_axi_aresetn] [get_bd_pins smartconnect_1/aresetn] [get_bd_pins qspi_data_nreset_0/nrst] [get_bd_pins qspi_inst_bootloader_0/nrst] [get_bd_pins axi_spad_write_adapt_0/aresetn] [get_bd_pins axi_output_read_adap_0/nrst] [get_bd_pins DMA_Controller_0/nrst] [get_bd_pins top_wrapper_0/i_nrst] [get_bd_pins systolic_csr_0/nrst]
   connect_bd_net -net proc_sys_reset_1_peripheral_aresetn [get_bd_pins proc_sys_reset_1/peripheral_aresetn] [get_bd_pins mig_7series_0/aresetn]
   connect_bd_net -net process_rdata_0_data_o [get_bd_pins process_rdata_0/data_o] [get_bd_pins smartconnect_1/M00_AXI_rdata]
   connect_bd_net -net process_wdata_0_data_o [get_bd_pins process_wdata_0/data_o] [get_bd_pins axi_uartlite_0/s_axi_wdata]
@@ -747,20 +747,23 @@ proc create_root_design { parentCell } {
   connect_bd_net -net qspi_inst_bootloader_0_valid [get_bd_pins qspi_inst_bootloader_0/valid] [get_bd_pins instmem_xpm_0/refill_valid]
   connect_bd_net -net smartconnect_1_M00_AXI_wdata [get_bd_pins smartconnect_1/M00_AXI_wdata] [get_bd_pins process_wdata_0/data_i]
   connect_bd_net -net systolic_csr_0_o_conv_mode [get_bd_pins systolic_csr_0/o_conv_mode] [get_bd_pins top_wrapper_0/i_conv_mode]
+  connect_bd_net -net systolic_csr_0_o_depth_mult [get_bd_pins systolic_csr_0/o_depth_mult] [get_bd_pins top_wrapper_0/i_depth_mult]
   connect_bd_net -net systolic_csr_0_o_i_addr_end [get_bd_pins systolic_csr_0/o_i_addr_end] [get_bd_pins top_wrapper_0/i_i_addr_end]
   connect_bd_net -net systolic_csr_0_o_i_c_size [get_bd_pins systolic_csr_0/o_i_c_size] [get_bd_pins top_wrapper_0/i_i_c_size]
   connect_bd_net -net systolic_csr_0_o_i_size [get_bd_pins systolic_csr_0/o_i_size] [get_bd_pins top_wrapper_0/i_i_size]
   connect_bd_net -net systolic_csr_0_o_i_start_addr [get_bd_pins systolic_csr_0/o_i_start_addr] [get_bd_pins top_wrapper_0/i_i_start_addr]
+  connect_bd_net -net systolic_csr_0_o_input_offset [get_bd_pins systolic_csr_0/o_input_offset] [get_bd_pins top_wrapper_0/i_input_offset]
   connect_bd_net -net systolic_csr_0_o_o_c_size [get_bd_pins systolic_csr_0/o_o_c_size] [get_bd_pins top_wrapper_0/i_o_c_size]
   connect_bd_net -net systolic_csr_0_o_o_size [get_bd_pins systolic_csr_0/o_o_size] [get_bd_pins top_wrapper_0/i_o_size]
   connect_bd_net -net systolic_csr_0_o_p_mode [get_bd_pins systolic_csr_0/o_p_mode] [get_bd_pins top_wrapper_0/i_p_mode]
-  connect_bd_net -net systolic_csr_0_o_quant_mult [get_bd_pins systolic_csr_0/o_quant_mult] [get_bd_pins top_wrapper_0/i_quant_mult]
-  connect_bd_net -net systolic_csr_0_o_quant_sh [get_bd_pins systolic_csr_0/o_quant_sh] [get_bd_pins top_wrapper_0/i_quant_shift]
+  connect_bd_net -net systolic_csr_0_o_pad_h [get_bd_pins systolic_csr_0/o_pad_h] [get_bd_pins top_wrapper_0/i_pad_h]
+  connect_bd_net -net systolic_csr_0_o_pad_w [get_bd_pins systolic_csr_0/o_pad_w] [get_bd_pins top_wrapper_0/i_pad_w]
   connect_bd_net -net systolic_csr_0_o_reg_clear [get_bd_pins systolic_csr_0/o_reg_clear] [get_bd_pins top_wrapper_0/i_reg_clear]
   connect_bd_net -net systolic_csr_0_o_route_en [get_bd_pins systolic_csr_0/o_route_en] [get_bd_pins top_wrapper_0/i_route_en]
   connect_bd_net -net systolic_csr_0_o_stride [get_bd_pins systolic_csr_0/o_stride] [get_bd_pins top_wrapper_0/i_stride]
   connect_bd_net -net systolic_csr_0_o_w_addr_end [get_bd_pins systolic_csr_0/o_w_addr_end] [get_bd_pins top_wrapper_0/i_w_addr_end]
   connect_bd_net -net systolic_csr_0_o_w_start_addr [get_bd_pins systolic_csr_0/o_w_start_addr] [get_bd_pins top_wrapper_0/i_w_start_addr]
+  connect_bd_net -net systolic_csr_0_o_zero_point [get_bd_pins systolic_csr_0/o_zero_point] [get_bd_pins top_wrapper_0/i_zero_point]
   connect_bd_net -net top_wrapper_0_dbg_first_or_read_addr [get_bd_pins top_wrapper_0/dbg_first_or_read_addr] [get_bd_pins ila_2/probe12]
   connect_bd_net -net top_wrapper_0_dbg_first_or_read_data [get_bd_pins top_wrapper_0/dbg_first_or_read_data] [get_bd_pins ila_2/probe14]
   connect_bd_net -net top_wrapper_0_dbg_first_word [get_bd_pins top_wrapper_0/dbg_first_word] [get_bd_pins ila_2/probe8]
@@ -778,7 +781,7 @@ proc create_root_design { parentCell } {
   connect_bd_net -net top_wrapper_0_dbg_seen_word_valid [get_bd_pins top_wrapper_0/dbg_seen_word_valid] [get_bd_pins ila_2/probe4]
   connect_bd_net -net top_wrapper_0_dbg_top_state [get_bd_pins top_wrapper_0/dbg_top_state] [get_bd_pins ila_2/probe16]
   connect_bd_net -net top_wrapper_0_dbg_word_valid_count [get_bd_pins top_wrapper_0/dbg_word_valid_count] [get_bd_pins ila_2/probe6]
-  connect_bd_net -net top_wrapper_0_o_done [get_bd_pins top_wrapper_0/o_done] [get_bd_pins systolic_csr_0/i_done] [get_bd_pins ila_2/probe0]
+  connect_bd_net -net top_wrapper_0_o_done [get_bd_pins top_wrapper_0/o_done] [get_bd_pins ila_2/probe0] [get_bd_pins systolic_csr_0/i_done]
   connect_bd_net -net top_wrapper_0_o_or_data_out [get_bd_pins top_wrapper_0/o_or_data_out] [get_bd_pins axi_output_read_adap_0/i_or_rd_data]
   connect_bd_net -net top_wrapper_0_o_or_data_out_valid [get_bd_pins top_wrapper_0/o_or_data_out_valid] [get_bd_pins axi_output_read_adap_0/i_or_rd_valid]
   connect_bd_net -net top_wrapper_0_o_word [get_bd_pins top_wrapper_0/o_word] [get_bd_pins ila_2/probe2]
@@ -790,15 +793,15 @@ proc create_root_design { parentCell } {
   # Create address segments
   assign_bd_address -offset 0x00010000 -range 0x00010000 -target_address_space [get_bd_addr_spaces cores_to_AXI4_0/M_AXI] [get_bd_addr_segs DMA_Controller_0/s_axil/reg0] -force
   assign_bd_address -offset 0x00000000 -range 0x00001000 -target_address_space [get_bd_addr_spaces cores_to_AXI4_0/M_AXI] [get_bd_addr_segs axi_bram_ctrl_0/S_AXI/Mem0] -force
-  assign_bd_address -offset 0x20000000 -range 0x00010000 -target_address_space [get_bd_addr_spaces cores_to_AXI4_0/M_AXI] [get_bd_addr_segs axi_output_read_adap_0/s_axi/reg0] -force
+  assign_bd_address -offset 0x20000000 -range 0x00020000 -target_address_space [get_bd_addr_spaces cores_to_AXI4_0/M_AXI] [get_bd_addr_segs axi_output_read_adap_0/s_axi/reg0] -force
   assign_bd_address -offset 0x44A00000 -range 0x00010000 -target_address_space [get_bd_addr_spaces cores_to_AXI4_0/M_AXI] [get_bd_addr_segs axi_quad_spi_0/AXI_LITE/Reg] -force
-  assign_bd_address -offset 0xC0000000 -range 0x00010000 -target_address_space [get_bd_addr_spaces cores_to_AXI4_0/M_AXI] [get_bd_addr_segs axi_spad_write_adapt_0/s_axi/reg0] -force
+  assign_bd_address -offset 0xC0000000 -range 0x00020000 -target_address_space [get_bd_addr_spaces cores_to_AXI4_0/M_AXI] [get_bd_addr_segs axi_spad_write_adapt_0/s_axi/reg0] -force
   assign_bd_address -offset 0x40600000 -range 0x00010000 -target_address_space [get_bd_addr_spaces cores_to_AXI4_0/M_AXI] [get_bd_addr_segs axi_uartlite_0/S_AXI/Reg] -force
   assign_bd_address -offset 0x80000000 -range 0x20000000 -target_address_space [get_bd_addr_spaces cores_to_AXI4_0/M_AXI] [get_bd_addr_segs mig_7series_0/memmap/memaddr] -force
   assign_bd_address -offset 0x00001000 -range 0x00001000 -target_address_space [get_bd_addr_spaces cores_to_AXI4_0/M_AXI] [get_bd_addr_segs systolic_csr_0/s_axil/reg0] -force
   assign_bd_address -offset 0x00010000 -range 0x00010000 -target_address_space [get_bd_addr_spaces qspi_bootloader_0/m] [get_bd_addr_segs DMA_Controller_0/s_axil/reg0] -force
   assign_bd_address -offset 0x00000000 -range 0x00001000 -target_address_space [get_bd_addr_spaces qspi_bootloader_0/m] [get_bd_addr_segs axi_bram_ctrl_0/S_AXI/Mem0] -force
-  assign_bd_address -offset 0x20000000 -range 0x20000000 -target_address_space [get_bd_addr_spaces qspi_bootloader_0/m] [get_bd_addr_segs axi_output_read_adap_0/s_axi/reg0] -force
+  assign_bd_address -offset 0x20000000 -range 0x00020000 -target_address_space [get_bd_addr_spaces qspi_bootloader_0/m] [get_bd_addr_segs axi_output_read_adap_0/s_axi/reg0] -force
   assign_bd_address -offset 0x44A00000 -range 0x00010000 -target_address_space [get_bd_addr_spaces qspi_bootloader_0/m] [get_bd_addr_segs axi_quad_spi_0/AXI_LITE/Reg] -force
   assign_bd_address -offset 0xC0000000 -range 0x40000000 -target_address_space [get_bd_addr_spaces qspi_bootloader_0/m] [get_bd_addr_segs axi_spad_write_adapt_0/s_axi/reg0] -force
   assign_bd_address -offset 0x40600000 -range 0x00010000 -target_address_space [get_bd_addr_spaces qspi_bootloader_0/m] [get_bd_addr_segs axi_uartlite_0/S_AXI/Reg] -force
@@ -806,7 +809,7 @@ proc create_root_design { parentCell } {
   assign_bd_address -offset 0x00001000 -range 0x00001000 -target_address_space [get_bd_addr_spaces qspi_bootloader_0/m] [get_bd_addr_segs systolic_csr_0/s_axil/reg0] -force
   assign_bd_address -offset 0x00010000 -range 0x00010000 -target_address_space [get_bd_addr_spaces qspi_inst_bootloader_0/m] [get_bd_addr_segs DMA_Controller_0/s_axil/reg0] -force
   assign_bd_address -offset 0x00000000 -range 0x00001000 -target_address_space [get_bd_addr_spaces qspi_inst_bootloader_0/m] [get_bd_addr_segs axi_bram_ctrl_0/S_AXI/Mem0] -force
-  assign_bd_address -offset 0x20000000 -range 0x20000000 -target_address_space [get_bd_addr_spaces qspi_inst_bootloader_0/m] [get_bd_addr_segs axi_output_read_adap_0/s_axi/reg0] -force
+  assign_bd_address -offset 0x20000000 -range 0x00020000 -target_address_space [get_bd_addr_spaces qspi_inst_bootloader_0/m] [get_bd_addr_segs axi_output_read_adap_0/s_axi/reg0] -force
   assign_bd_address -offset 0x44A00000 -range 0x00010000 -target_address_space [get_bd_addr_spaces qspi_inst_bootloader_0/m] [get_bd_addr_segs axi_quad_spi_0/AXI_LITE/Reg] -force
   assign_bd_address -offset 0xC0000000 -range 0x40000000 -target_address_space [get_bd_addr_spaces qspi_inst_bootloader_0/m] [get_bd_addr_segs axi_spad_write_adapt_0/s_axi/reg0] -force
   assign_bd_address -offset 0x40600000 -range 0x00010000 -target_address_space [get_bd_addr_spaces qspi_inst_bootloader_0/m] [get_bd_addr_segs axi_uartlite_0/S_AXI/Reg] -force
@@ -814,7 +817,7 @@ proc create_root_design { parentCell } {
   assign_bd_address -offset 0x00001000 -range 0x00001000 -target_address_space [get_bd_addr_spaces qspi_inst_bootloader_0/m] [get_bd_addr_segs systolic_csr_0/s_axil/reg0] -force
   assign_bd_address -offset 0x00010000 -range 0x00010000 -target_address_space [get_bd_addr_spaces DMA_Controller_0/M_AXI] [get_bd_addr_segs DMA_Controller_0/s_axil/reg0] -force
   assign_bd_address -offset 0x00000000 -range 0x00001000 -target_address_space [get_bd_addr_spaces DMA_Controller_0/M_AXI] [get_bd_addr_segs axi_bram_ctrl_0/S_AXI/Mem0] -force
-  assign_bd_address -offset 0x20000000 -range 0x20000000 -target_address_space [get_bd_addr_spaces DMA_Controller_0/M_AXI] [get_bd_addr_segs axi_output_read_adap_0/s_axi/reg0] -force
+  assign_bd_address -offset 0x20000000 -range 0x00020000 -target_address_space [get_bd_addr_spaces DMA_Controller_0/M_AXI] [get_bd_addr_segs axi_output_read_adap_0/s_axi/reg0] -force
   assign_bd_address -offset 0x44A00000 -range 0x00010000 -target_address_space [get_bd_addr_spaces DMA_Controller_0/M_AXI] [get_bd_addr_segs axi_quad_spi_0/AXI_LITE/Reg] -force
   assign_bd_address -offset 0xC0000000 -range 0x40000000 -target_address_space [get_bd_addr_spaces DMA_Controller_0/M_AXI] [get_bd_addr_segs axi_spad_write_adapt_0/s_axi/reg0] -force
   assign_bd_address -offset 0x40600000 -range 0x00010000 -target_address_space [get_bd_addr_spaces DMA_Controller_0/M_AXI] [get_bd_addr_segs axi_uartlite_0/S_AXI/Reg] -force
