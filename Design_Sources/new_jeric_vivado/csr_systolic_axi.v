@@ -21,6 +21,8 @@
 // 0x38 zero_point
 // 0x3C input_offset
 // 0x40 DDR_STATUS [0]=i_ddr_calib_done
+// 0x44 pad_h
+// 0x48 pad_w
 //////////////////////////////////////////////////////////////////////////////////
 
 `timescale 1ns/1ps
@@ -84,7 +86,11 @@ module systolic_csr #(
 
     // --- Zero Points ---
     output reg  [DATA_WIDTH-1:0]   o_zero_point,
-    output reg  [DATA_WIDTH-1:0]   o_input_offset
+    output reg  [DATA_WIDTH-1:0]   o_input_offset,
+
+    // --- Padding ---
+    output reg  [DATA_WIDTH-1:0]   o_pad_h,
+    output reg  [DATA_WIDTH-1:0]   o_pad_w
 );
 
     // ================================================================
@@ -146,6 +152,9 @@ module systolic_csr #(
 
             o_zero_point   <= {DATA_WIDTH{1'b0}};
             o_input_offset <= {DATA_WIDTH{1'b0}};
+
+            o_pad_h <= {DATA_WIDTH{1'b0}};
+            o_pad_w <= {DATA_WIDTH{1'b0}};
 
             done_latched              <= 1'b0;
             run_active                <= 1'b0;
@@ -258,6 +267,18 @@ module systolic_csr #(
                         o_input_offset <= s_axil_wdata[DATA_WIDTH-1:0];
                     end
 
+                    6'h10: begin
+                        // DDR_STATUS is read-only.
+                    end
+
+                    6'h11: begin // Top padding
+                        o_pad_h <= s_axil_wdata[DATA_WIDTH-1:0];
+                    end
+                    
+                    6'h12: begin // Left padding
+                        o_pad_w <= s_axil_wdata[DATA_WIDTH-1:0];
+                    end
+
                     default: begin
                         // unmapped write ignored
                     end
@@ -314,12 +335,17 @@ module systolic_csr #(
                     // This is safer than exposing raw i_done only.
                     6'h0D: s_axil_rdata <= {31'd0, done_latched};
 
+                    // Input and output zero points/offsets.
                     6'h0E: s_axil_rdata <= {{(32-DATA_WIDTH){o_zero_point[DATA_WIDTH-1]}}, o_zero_point};
                     6'h0F: s_axil_rdata <= {{(32-DATA_WIDTH){o_input_offset[DATA_WIDTH-1]}}, o_input_offset};
 
                     // DDR_STATUS at byte offset 0x40.
                     // Since address decode uses [7:2], 0x40 becomes 6'h10.
                     6'h10: s_axil_rdata <= {31'd0, i_ddr_calib_done};
+
+                    // Padding registers.
+                    6'h11: s_axil_rdata <= {{(32-DATA_WIDTH){1'b0}}, o_pad_h};
+                    6'h12: s_axil_rdata <= {{(32-DATA_WIDTH){1'b0}}, o_pad_w};
 
                     default: s_axil_rdata <= 32'hB0BACAFE;
                 endcase
