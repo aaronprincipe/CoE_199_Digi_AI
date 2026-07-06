@@ -27,7 +27,7 @@
 module axi_output_read_adapter #(
     parameter AXI_DATA_WIDTH = 32,
     parameter AXI_ADDR_WIDTH = 32,
-    parameter BUF_ADDR_WIDTH = 14     // matches i_or_addr, check top_wrapper and csr map for consistency
+    parameter BUF_ADDR_WIDTH = 16     // matches i_or_addr, check top_wrapper and csr map for consistency
 )(
     input  wire clk,
     input  wire nrst,
