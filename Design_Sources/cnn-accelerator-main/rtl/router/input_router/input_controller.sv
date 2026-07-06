@@ -25,11 +25,14 @@ module ir_controller #(
     input logic [ADDR_WIDTH-1:0] i_i_c_size,
     input logic [ADDR_WIDTH-1:0] i_i_c,
     input logic [ADDR_WIDTH-1:0] i_stride,
+    input logic [ADDR_WIDTH-1:0] i_pad_h,
+    input logic [ADDR_WIDTH-1:0] i_pad_w,
     input logic [ADDR_WIDTH-1:0] i_start_addr,
 
     // Data lane address assignment
     input logic [ADDR_WIDTH-1:0] i_slots,
     output logic [0:KERNEL_LENGTH-1][$clog2(SPAD_N)+ADDR_WIDTH-1:0] o_dl_sw_addr,
+    output logic [0:KERNEL_LENGTH-1] o_dl_sw_pad,
     output logic [$clog2(SPAD_N)+ADDR_WIDTH-1:0] o_dl_start_addr,
     output logic [$clog2(SPAD_N)+ADDR_WIDTH-1:0] o_dl_end_addr,
     output logic [ADDR_WIDTH-1:0] o_dl_id,
@@ -86,25 +89,37 @@ module ir_controller #(
 
     // Add logic for starting read address of tile reader
     // Should not go from the start everytime
-    
+
     // Dwise sliding window address generation
     logic [0:KERNEL_LENGTH-1][$clog2(SPAD_N)+ADDR_WIDTH-1:0] addr;
+    logic [0:KERNEL_LENGTH-1] pad; // 1 if the corresponding address is out of bounds and should be padded with input offset, 0 otherwise
+
+    logic signed [0:KERNEL_LENGTH-1][ADDR_WIDTH-1:0] in_x, in_y; // The actual x and y coordinates in the ifmap corresponding to each element in the kernel, considering padding. These can be negative, which means that element should be padded with 0.
+    logic signed [ADDR_WIDTH-1:0] in_x_origin, in_y_origin; // The top left corner of the sliding window in the ifmap coordinates, considering padding. This can be negative, which means the sliding window is hanging over the padded area.
+    assign in_x_origin = o_x - i_pad_w;  // o_x is x_ofmap * stride, sorry for the confusing naming.
+    assign in_y_origin = o_y - i_pad_h;  // in_x_origin is the actual x_ifmap coordinate with padding considered.
+    
     genvar x, y;
-    generate  
+    generate
         for (x = 0; x < KERNEL_SIZE; x = x + 1) begin : gen_x
             for (y = 0; y < KERNEL_SIZE; y = y + 1) begin : gen_y
                 localparam int addr_idx = x * KERNEL_SIZE + y;
+                
+                assign in_x[addr_idx] = in_x_origin + x;
+                assign in_y[addr_idx] = in_y_origin + y;
                 always_comb begin
                     if (i_conv_mode) begin
-                    // offset_nchw(n, c, h, w) = c * HW + h * W + w
-                    // Uncomment if using NCHW format
-                    // addr[addr_idx] = (i_start_addr * SPAD_N) + ((o_x + x) * i_i_size + (o_y + y));
-
-                    // offset_nhwc(n, c, h, w) = h * WC + w * C + c
-                    // Uncomment if using NHWC format
-                        addr[addr_idx] = (i_start_addr * SPAD_N) + (o_x + x) * i_i_size * i_i_c_size + (o_y + y) * i_i_c_size + i_i_c;
+                        addr[addr_idx] = (i_start_addr * SPAD_N) 
+                                        + in_x[addr_idx] * i_i_size * i_i_c_size 
+                                        + in_y[addr_idx] * i_i_c_size 
+                                        + i_i_c;
+                        pad[addr_idx] = (in_x[addr_idx] >= i_i_size) 
+                                        || (in_y[addr_idx] >= i_i_size) 
+                                        || (in_x[addr_idx] < 0) 
+                                        || (in_y[addr_idx] < 0);
                     end else begin
                         addr[addr_idx] = '0;
+                        pad[addr_idx] = 0;
                     end
                 end
             end
@@ -112,11 +127,17 @@ module ir_controller #(
     endgenerate
 
     assign route_en = i_en & i_fifo_empty;
-    assign x_increment = o_x < (i_o_size * i_stride) - i_stride;
-    assign y_increment = o_y < (i_o_size * i_stride) - i_stride;
+    assign x_increment = x_ofmap < i_o_size - 1;
+    assign y_increment = y_ofmap < i_o_size - 1;
     assign xy_increment = x_increment || y_increment;
 
-    assign d_tile_addr = addr[0] >> $clog2(SPAD_N); // Assuming the first address corresponds to the first tile. See code below for address generation
+    logic [ADDR_WIDTH-1:0] first_valid_x, first_valid_y; // We want to jump to the first valid address in the spad, regardless of padding.
+    assign first_valid_x = (in_x_origin >= 0) ? (in_x_origin) : (0);
+    assign first_valid_y = (in_y_origin >= 0) ? (in_y_origin) : (0);
+    assign d_tile_addr = ((i_start_addr * SPAD_N) 
+                        + first_valid_x * i_i_size * i_i_c_size 
+                        + first_valid_y * i_i_c_size 
+                        + i_i_c) >> $clog2(SPAD_N);
     assign p_tile_addr = (prev_addr + (i_start_addr * SPAD_N)) >> $clog2(SPAD_N);
 
     always_ff @(posedge i_clk) begin
@@ -131,6 +152,7 @@ module ir_controller #(
             o_tr_stall <= 0;
             o_ready <= 0;
             o_dl_sw_addr <= 0;
+            o_dl_sw_pad <= 0;
             o_dl_start_addr <= 0;
             o_dl_end_addr <= 0;
             o_dl_id <= 0;
@@ -166,6 +188,7 @@ module ir_controller #(
             o_tr_stall <= 0;
             o_ready <= 0;
             o_dl_sw_addr <= 0;
+            o_dl_sw_pad <= 0;
             o_dl_start_addr <= 0;
             o_dl_end_addr <= 0;
             o_dl_id <= 0;
@@ -238,8 +261,9 @@ module ir_controller #(
                 ADDRESS_GENERATION: begin
                     if (i_conv_mode) begin
                         // Dwise
-                        o_dl_sw_addr <= addr;
-                        if (!first_row) begin
+                        o_dl_sw_addr <= addr; // sliding window addresses for dwise convolution
+                        o_dl_sw_pad <= pad; // sliding window padding bits for dwise convolution
+                        if ((!first_row) || (tile_addr > d_tile_addr)) begin // when padded ifmaps wraparound, sometimes the new d_tile_addr is lower.
                             first_row <= 1;
 
                             if (d_tile_addr > 0) begin

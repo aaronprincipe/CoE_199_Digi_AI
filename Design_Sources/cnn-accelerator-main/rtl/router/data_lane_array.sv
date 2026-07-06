@@ -16,10 +16,12 @@ module data_lane_array #(
     input logic i_fifo_clear,
     input logic i_fifo_ptr_reset,
     input logic i_conv_mode, // Convolution mode - 0: PWise, 1: DWise
+    input logic [DATA_WIDTH-1:0] i_pad_value, // Value to use for padded inputs
     
     // Address Reference
     input logic [ADDR_WIDTH-1:0] i_id,
     input [0:MPP_DEPTH-1][$clog2(SPAD_N)+ADDR_WIDTH-1:0] i_sw_addr,
+    input logic [0:MPP_DEPTH-1] i_sw_pad,
     input logic [$clog2(SPAD_N)+ADDR_WIDTH-1:0] i_start_addr,
     input logic [$clog2(SPAD_N)+ADDR_WIDTH-1:0] i_end_addr,
     input logic i_addr_write_en,
@@ -41,10 +43,11 @@ module data_lane_array #(
     output logic o_fifo_full,
     output logic o_fifo_empty,
     output logic o_route_done,
-    output logic o_idle
+    output logic o_idle,
+    output logic o_stall
 );
     logic [COUNT-1:0] counter, rr_pop_en;
-    logic [COUNT-1:0] rr_data_empty, rr_data_valid, rr_miso_full, rr_route_done, rr_idle;
+    logic [COUNT-1:0] rr_data_empty, rr_data_valid, rr_miso_full, rr_route_done, rr_idle, rr_stall;
     logic [COUNT-1:0][$clog2(MISO_DEPTH):0] rr_slots;
 
     // Stalled popping logic
@@ -95,11 +98,14 @@ module data_lane_array #(
                 .i_start_addr(i_start_addr),
                 .i_end_addr(i_end_addr),
                 .i_sw_addr(i_sw_addr),
+                .i_sw_pad(i_sw_pad),
                 .i_addr_write_en(i_addr_write_en & (i_id == ii)),
                 .i_data(i_data),
                 .i_data_valid(i_data_valid),
                 .i_addr(i_addr),
                 .i_p_mode(i_p_mode),
+                .i_pad_value(i_pad_value),
+                .o_stall(rr_stall[ii]),
                 .o_data(o_data[ii]),
                 .o_miso_empty(rr_data_empty[ii]),
                 .o_miso_full(rr_miso_full[ii]),
@@ -118,6 +124,7 @@ module data_lane_array #(
         o_route_done = &rr_route_done;
         o_idle = &rr_idle;
         o_slots = rr_slots[0];
+        o_stall = |rr_stall; // If any lane needs to stall, stall the tile reader
     end
 
 endmodule

@@ -28,11 +28,14 @@ module data_lane #(
     
     // Dwise Address Reference
     input [0:MPP_DEPTH-1][$clog2(SPAD_N)+ADDR_WIDTH-1:0] i_sw_addr,
+    input logic [0:MPP_DEPTH-1] i_sw_pad,
     
     // Tile Reader Signals
     input logic [SPAD_DATA_WIDTH-1:0] i_data,
     input logic [ADDR_WIDTH-1:0] i_addr,
     input logic i_data_valid,
+    input logic [DATA_WIDTH-1:0] i_pad_value,
+    output logic o_stall, // Stall signal to tile reader. If the hit data is a padding entry, we need to stall the tile reader.
 
     // MISO FIFO related signals
     input logic [1:0] i_p_mode,
@@ -58,13 +61,13 @@ module data_lane #(
     logic pds_addr_write_en, dds_addr_write_en;
     logic [SPAD_DATA_WIDTH-1:0] pds_data, dds_data;
     logic [SPAD_N-1:0] pds_data_hit, dds_data_hit;
-    logic pds_route_done, dds_route_done;
+    logic pds_route_done, dds_route_done, dds_stall;
     
     // Write to MISO FIFO
     logic [SPAD_DATA_WIDTH-1:0] f_data;
     logic [SPAD_N-1:0] f_data_hit;
 
-    logic route_done;
+    logic route_done, stall;
 
     // Select between Pwise and Dwise
     always_comb begin
@@ -80,6 +83,7 @@ module data_lane #(
             f_data = dds_data;
 
             route_done = dds_route_done;
+            stall = dds_stall; // For Dwise we may need to stall the tile reader if the data hit is a padding entry, since the address order is not guaranteed to be the same as the data order
 
         end else begin
             // Pwise
@@ -93,6 +97,7 @@ module data_lane #(
             f_data = pds_data;
 
             route_done = pds_route_done;
+            stall = 0; // No need to stall for Pwise since the address order is guaranteed to be the same as the data order
         end
     end
 
@@ -135,13 +140,16 @@ module data_lane #(
         .i_reg_clear(i_reg_clear),
         .i_en(dds_en),
         .i_sw_addr(i_sw_addr),
+        .i_sw_pad(i_sw_pad),
         .i_addr_write_en(dds_addr_write_en),
         .i_spad_data(i_data),
         .i_spad_addr(spad_addr),
         .i_data_valid(i_data_valid),
+        .i_pad_value(i_pad_value),
         .o_data_hit(dds_data_hit),
         .o_data(dds_data),
-        .o_route_done(dds_route_done)
+        .o_route_done(dds_route_done),
+        .o_stall(dds_stall)        
     );
 
     miso_fifo #(
@@ -172,5 +180,6 @@ module data_lane #(
         o_route_done = route_done;
         o_idle = miso_full || route_done;
         o_slots = slots;
+        o_stall = stall;
     end
 endmodule

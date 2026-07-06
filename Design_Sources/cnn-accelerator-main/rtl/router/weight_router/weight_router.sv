@@ -78,7 +78,7 @@ module weight_router #(
     logic dl_addr_write_en;
     
     spad #(
-        .ADDR_WIDTH(ADDR_WIDTH),
+        .ADDR_WIDTH(14),
         .SPAD_WIDTH(SPAD_DATA_WIDTH),
         .DATA_WIDTH(DATA_WIDTH),
         .SPAD_N(SPAD_N)
@@ -103,7 +103,7 @@ module weight_router #(
         .i_nrst(i_nrst),
         .i_en(route_en),
         .i_reg_clear(reg_clear || tr_clear || i_reg_clear),
-        .i_stall(tr_stall),
+        .i_stall(tr_stall), // No need for additional pad_stall for now.
         .i_start_addr(tile_addr),
         .i_addr_end(i_addr_end),
         .i_data_in(spad_data_out),
@@ -178,6 +178,7 @@ module weight_router #(
         .i_conv_mode(i_conv_mode),
         .i_id(dl_id),
         .i_sw_addr(dl_sw_addr),
+        .i_sw_pad('0), // No padding for weights.
         .i_start_addr(dl_start_addr),
         .i_end_addr(dl_end_addr),
         .i_addr_write_en(dl_addr_write_en),
@@ -187,12 +188,14 @@ module weight_router #(
         .i_data_valid(tr_data_valid),
         .i_miso_pop_en(fifo_pop_en),
         .i_p_mode(i_p_mode),
+        .i_pad_value('0), // No padding for weights
         .o_data(weight_data),
         .o_data_valid(o_data_valid),
         .o_fifo_full(fifo_full),
         .o_fifo_empty(fifo_empty),
         .o_route_done(fifo_route_done),
-        .o_idle(fifo_idle)
+        .o_idle(fifo_idle),
+        .o_stall() // No need to stall for weights since there is no padding.
     );
 
     genvar ii;
