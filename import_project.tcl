@@ -3,7 +3,7 @@
 ## CHANGE THIS TO THE FILEPATH OF YOUR ACTUAL DIRECTORY ##
 ## REPLACE THE \ SLASH AS A /                           ##
 ##########################################################
-set SRCDIR "C:/Users/marie/CoE_199_Digi_AI"
+set SRCDIR "C:/Users/Aaron/CoE_199_Digi_AI"
 cd $SRCDIR
 
 #Add Verilog Files to Project
