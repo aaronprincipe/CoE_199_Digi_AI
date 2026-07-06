@@ -2,7 +2,7 @@
 
 module top_wrapper #(
     // ---- Constants ----
-    parameter ADDR_WIDTH      = 14,
+    parameter ADDR_WIDTH      = 15
 )(
     input  wire        i_clk,
     input  wire        i_nrst,
@@ -15,10 +15,12 @@ module top_wrapper #(
     input  wire        i_route_en,
     input  wire [1:0]  i_p_mode,
     input  wire        i_conv_mode,
-    input  wire [7:0]  i_i_size,
-    input  wire [7:0]  i_i_c_size,
-    input  wire [7:0]  i_o_c_size,
-    input  wire [7:0]  i_o_size,
+    input  wire [ADDR_WIDTH-1:0]  i_i_size,
+    input  wire [ADDR_WIDTH-1:0]  i_i_c_size,
+    input  wire [ADDR_WIDTH-1:0]  i_o_c_size,
+    input  wire [ADDR_WIDTH-1:0]  i_o_size,
+    input  wire [7:0]  i_pad_h,
+    input  wire [7:0]  i_pad_w,
     input  wire [7:0]  i_stride,
     input  wire [7:0]  i_depth_mult,    
     input  wire [ADDR_WIDTH-1:0]  i_i_start_addr,
@@ -90,6 +92,8 @@ module top_wrapper #(
         .i_depth_mult       (i_depth_mult),
         .zero_point         (i_zero_point),
         .i_input_offset     (i_input_offset),
+        .i_pad_h            (i_pad_h),
+        .i_pad_w            (i_pad_w),
         .i_i_start_addr     (i_i_start_addr),
         .i_i_addr_end       (i_i_addr_end),
         .i_w_start_addr     (i_w_start_addr),

@@ -40,6 +40,8 @@ module top_accel #(
     input logic [ADDR_WIDTH-1:0] i_depth_mult,          // Only used for DW. Ignored for PW.
     input logic [DATA_WIDTH-1:0] zero_point,            // Output zero point for quantization
     input logic [DATA_WIDTH-1:0] i_input_offset,        // Offset to be added to input values for quantization
+    input logic [DATA_WIDTH-1:0] i_pad_h,               // Height of zero padding around the input feature map
+    input logic [DATA_WIDTH-1:0] i_pad_w,               // Width of zero padding around the input feature map
 
     // Input router parameters
     input logic [ADDR_WIDTH-1:0] i_i_start_addr,        // Starting address in the input SPAD for the input router to read from
@@ -274,6 +276,8 @@ module top_accel #(
         .i_i_c_size(i_i_c_size),
         .i_i_c(i_c),
         .i_stride(i_stride),
+        .i_pad_h(i_pad_h),
+        .i_pad_w(i_pad_w),
         .i_spad_write_en(spad_i_write_en),
         .i_spad_data_in(i_data_in),
         .i_spad_write_addr(i_write_addr),
@@ -405,7 +409,7 @@ module top_accel #(
     );
 
     spad #(
-        .ADDR_WIDTH(ADDR_WIDTH),
+        .ADDR_WIDTH(14),
         .SPAD_WIDTH(SPAD_DATA_WIDTH),
         .DATA_WIDTH(DATA_WIDTH),
         .SPAD_N(SPAD_N)
