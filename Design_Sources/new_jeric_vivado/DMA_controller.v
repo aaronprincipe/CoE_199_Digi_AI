@@ -345,18 +345,24 @@ module DMA_Controller #(
                     end
          
                     S_RADDR: begin
-                        // Compute burst size
+                        // Compute burst size  
+                        // num_beats = ceil(w_rem / BPB)
+                        // ARLEN = num_beats - 1
+                        // m_bytes = num_beats * BPB (actual bytes in the burst on the bus)
                         if (w_rem[m_ch] >= BMAX) begin
                             m_blen  <= MAX_AXI_BURST - 1;
                             m_bytes <= BMAX;
                         end else begin
-                            m_blen  <= (w_rem[m_ch] / BPB) - 1;
-                            m_bytes <= w_rem[m_ch];
+                            // For small transfers: round up bytes to beats, then calculate actual burst bytes
+                            // num_beats = (w_rem + BPB - 1) / BPB
+                            // m_bytes = num_beats * BPB
+                            m_blen  <= ((w_rem[m_ch] + (BPB-1)) / BPB) - 1;
+                            m_bytes <= ((w_rem[m_ch] + (BPB-1)) / BPB) * BPB;
                         end
                         M_AXI_ARADDR  <= w_src[m_ch];
                         M_AXI_ARLEN   <= (w_rem[m_ch] >= BMAX) ?
                                           MAX_AXI_BURST - 1 :
-                                          (w_rem[m_ch] / BPB) - 1;
+                                          ((w_rem[m_ch] + (BPB-1)) / BPB) - 1;
                         M_AXI_ARSIZE  <= LBPB[2:0];
                         M_AXI_ARBURST <= 2'b01;
                         M_AXI_ARVALID <= 1;
@@ -371,7 +377,11 @@ module DMA_Controller #(
          
                     S_RDATA: begin
                         if (M_AXI_RVALID && M_AXI_RREADY) begin
-                            fifo[fw] <= M_AXI_RDATA;
+                            // Byte-swap: convert CPU little-endian {a0,a1,a2,a3} to accelerator big-endian {a3,a2,a1,a0}
+                            // Similarly, converts big-endian from accelerator to little-endian for CPU
+                            // Assumes 32b words. If DATA_WIDTH changes, this logic needs to be updated.
+                            // Actually this should be done in the adapters instead, move this logic there next time.
+                            fifo[fw] <= {M_AXI_RDATA[7:0], M_AXI_RDATA[15:8], M_AXI_RDATA[23:16], M_AXI_RDATA[31:24]};
                             fw       <= fw + 1;
                             if (M_AXI_RLAST) begin
                                 M_AXI_RREADY  <= 0;
