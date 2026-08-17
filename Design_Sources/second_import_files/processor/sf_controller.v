@@ -584,7 +584,7 @@ module sf_controller(
     assign if_flush = ISR_PC_flush;
     assign id_flush = (ISR_pipe_flush || jump_flush || branch_flush) || (!if_ready && !id_stall);
     assign exe_flush = (exe_jalr_hazard && ~mem_stall) || branch_flush || (is_nop && ~mem_stall);
-    assign mem_flush = (div_running || mul_stall) || (load_hazard && dmem_ready) || ((exe_opcode == `OPC_STYPE) && dmem_ready);	
+    assign mem_flush = ((div_running || mul_stall) && ~mem_stall) || (load_hazard && dmem_ready) || ((exe_opcode == `OPC_STYPE) && dmem_ready);	
     assign wb_flush = mem_stall;
 
     // Enables
